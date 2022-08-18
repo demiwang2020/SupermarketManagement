@@ -1,0 +1,71 @@
+﻿
+@page "/products"
+@attribute [Authorize(Policy ="AdminOnly")]
+@inject NavigationManager NavigationManager
+@inject UserCases.UseCaseInterfaces.IGetCategoryByIdUseCase GetCategoryByIdUseCase 
+@inject UserCases.UseCaseInterfaces.IViewProductsUseCase ViewProductsUseCase;
+@inject UserCases.UseCaseInterfaces.IDeleteProductUseCase DeleteProductUseCase;
+
+<h3>Manage Products</h3>
+
+@if (products != null) { 
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Product Category</th>
+                <th>Price</th>
+                <th>Quatity</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in products)
+            {
+                <tr>
+                    <td>@product.Name</td>
+                    <td>@GetCategoryByIdUseCase.Execute(product.CategoryId)?.Name</td>
+                    <td>@(Math.Round(product.Price,2))</td>
+                    <td>@product.Quantity</td>
+                    <td>
+                         <button type="button" @onclick="() => EditProduct(product)" class="btn btn-link">Edit</button>
+                          <button type="button" @onclick="()=> DeleteProduct(product.ProductId)" class="btn btn-link">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <br/>
+  <button type="button" @onclick="OnClickAddProduct" class="btn btn-primary">Add Product</button>
+}
+@code {
+    private IEnumerable<Product> products;
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        LoadProducts();
+    }
+
+
+    public void LoadProducts()
+    {
+        products = ViewProductsUseCase.Execute()?.ToList();
+    }
+    public void OnClickAddProduct() {
+
+        NavigationManager.NavigateTo("/addproduct");
+
+    }
+    public void EditProduct(Product product) { 
+    
+        NavigationManager.NavigateTo($"/editproduct/{product.ProductId}");
+    }
+    public void DeleteProduct(int ProductId)
+
+    {
+        DeleteProductUseCase.Execute(ProductId);
+         LoadProducts();
+    }
+  }

@@ -1,0 +1,58 @@
+﻿@page "/cashier_console"
+@attribute [Authorize(Policy ="CashierOnly")]
+@if (!string.IsNullOrWhiteSpace(cashierName))
+{
+<div class="row">
+    <div class="col"><h3>Cashier's Console</h3></div>
+    <div class="col-4">
+        <div class="form-group">
+            <label for="cashier">Cashioer Name:</label>
+            <label>&nbsp;</label>
+            <input type="text" id="cashier" class="form-control" @bind-value="cashierName" />
+        </div>
+    </div>
+</div>
+<br />
+
+<div class="row">
+    <div class="col-4">
+        <SelectProductForSellingComponent OnProductSelected="SelectProduct"></SelectProductForSellingComponent>
+        <br />
+        <SellProductComponent CashierName="@cashierName" SelectedProduct="selectedProduct" OnProductSold="SellProduct"></SellProductComponent>
+    </div>
+    <div class="=col-8">
+        <br />
+        <TodayTransactionComponent @ref="transactionComponent"></TodayTransactionComponent>
+    </div>
+</div>
+}
+
+
+@code {
+    private TodayTransactionComponent transactionComponent;
+    private Product selectedProduct;
+    private string cashierName;
+    [CascadingParameter]
+    private Task<AuthenticationState> _authState { get; set; }
+    private AuthenticationState authState;
+    protected override async Task OnInitializedAsync()
+    {
+        authState = await _authState;
+        cashierName = authState.User.Identity.Name; 
+    }
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+         transactionComponent.LoadTransactions(cashierName);
+    }
+    public void SelectProduct(Product product)
+    {
+
+        selectedProduct = product;
+    }
+    public void SellProduct(Product product)
+    {
+
+        transactionComponent.LoadTransactions(cashierName);
+    }
+}
